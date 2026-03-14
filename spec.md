@@ -1,36 +1,32 @@
 # Longevity Dashboard
 
 ## Current State
-- Full-stack app with Motoko backend and React frontend
-- Top header with logo + tab navigation (Dashboard, Ernährung, Schlaf, Bewegung, Stress, Fasten, Routinen)
-- Dashboard shows score ring, category tiles (read-only status), DNA helix panel
-- Category components (Ernaehrung, Schlaf, Bewegung, Stress, Intervallfasten, Routinen) are separate pages
-- Backend stores data globally (not per user/principal)
-- No authentication
+Dark mode health dashboard with 6 tracking categories (Ernährung, Schlaf, Bewegung, Stress, Intervallfasten, Routinen) plus an animated DNA helix background. User authentication via Internet Identity. Each user has an isolated dashboard. Nutrition tracks protein (calculated from body weight at 1.8g/kg) and vegetables (400g goal). Routinen support optional notes.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Internet Identity login screen: unauthenticated users see a branded login page before accessing the dashboard
-- Per-user data isolation: all backend operations scoped to the caller's principal
-- Clickable dashboard tiles: each category tile opens the corresponding input form/page
-- Back navigation from category pages back to Dashboard (no top menu needed)
+- `WeightEntry` type in backend: `{ id: Nat, weightKg: Float, timestamp: Int }`
+- `addWeightEntry(weightKg: Float): async Nat` backend function
+- `getWeightHistory(): async [WeightEntry]` backend function (returns all entries sorted by timestamp)
+- `Profil` frontend view (new tab navigated from dashboard tile)
+- Profile view contains:
+  - Name field (saved to existing UserProfile)
+  - Weight entry input (kg) with save button
+  - Weight history chart showing the last 30 entries as a line chart (date on x-axis, weight on y-axis)
+  - Current protein target displayed (weight × 1.8g)
+- Dashboard tile for "Profil" to navigate to the new view
 
 ### Modify
-- Remove the entire top header/menu bar (logo, date, tab navigation)
-- Dashboard category tiles become interactive buttons that navigate to category pages
-- Backend: all storage maps keyed by principal so each user has their own data
-- App routing: state-based navigation controlled from Dashboard tile clicks
+- `App.tsx`: add `"profil"` to ViewId union and render `<Profil onBack={handleBack} />`
+- Dashboard: add a Profil tile alongside the existing 6 category tiles
 
 ### Remove
-- Top header with logo and navigation tabs
-- Global (shared) data storage in backend
+- Nothing removed
 
 ## Implementation Plan
-1. Add authorization component for Internet Identity login
-2. Regenerate backend with per-principal data storage (Map<Principal, Map<Nat, Entry>>)
-3. Remove header/nav from App.tsx; navigation driven by Dashboard tile clicks
-4. Dashboard tiles become clickable cards that set the active view
-5. Each category view has a back button to return to Dashboard
-6. Login screen shown when not authenticated; dashboard shown when authenticated
-7. Logout button accessible from dashboard (subtle, e.g. in footer or top-right corner)
+1. Update `backend/main.mo` to add WeightEntry type, storage, addWeightEntry, and getWeightHistory functions
+2. Update `backend.d.ts` to reflect new backend API
+3. Create `src/frontend/src/components/Profil.tsx` with name field, weight input, weight history chart
+4. Update `App.tsx` to add profil route
+5. Update `Dashboard.tsx` to include Profil tile

@@ -11,6 +11,7 @@ const CATEGORIES = [
     emoji: "🥗",
     color: "oklch(0.76 0.15 180)",
     description: "Nährstoffe tracken",
+    isScored: true,
   },
   {
     key: "sleep" as const,
@@ -19,6 +20,7 @@ const CATEGORIES = [
     emoji: "🌙",
     color: "oklch(0.70 0.18 210)",
     description: "Schlafqualität erfassen",
+    isScored: true,
   },
   {
     key: "movement" as const,
@@ -27,6 +29,7 @@ const CATEGORIES = [
     emoji: "⚡",
     color: "oklch(0.83 0.22 145)",
     description: "Aktivitäten loggen",
+    isScored: true,
   },
   {
     key: "stress" as const,
@@ -35,6 +38,7 @@ const CATEGORIES = [
     emoji: "🧘",
     color: "oklch(0.76 0.12 250)",
     description: "Stresslevel messen",
+    isScored: true,
   },
   {
     key: "fasting" as const,
@@ -43,6 +47,7 @@ const CATEGORIES = [
     emoji: "⏱",
     color: "oklch(0.78 0.18 160)",
     description: "Intervallfasten Timer",
+    isScored: true,
   },
   {
     key: "routines" as const,
@@ -51,8 +56,19 @@ const CATEGORIES = [
     emoji: "✅",
     color: "oklch(0.72 0.16 195)",
     description: "Gewohnheiten pflegen",
+    isScored: true,
   },
 ];
+
+const PROFIL_TILE = {
+  key: "profil" as const,
+  view: "profil",
+  label: "Profil",
+  emoji: "👤",
+  color: "oklch(0.78 0.12 280)",
+  description: "Profil & Gewicht",
+  isScored: false,
+};
 
 // r=72, circumference = 2π×72 ≈ 452.4
 const RING_R = 72;
@@ -77,6 +93,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   }));
 
   const completedCount = markers.filter((m) => m.completed).length;
+
+  const allTiles = [...CATEGORIES, PROFIL_TILE];
 
   return (
     <div
@@ -258,8 +276,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full animate-fade-in-up"
           style={{ animationDelay: "0.2s" }}
         >
-          {CATEGORIES.map((cat, idx) => {
-            const isDone = summary ? summary[cat.key] : false;
+          {allTiles.map((cat, idx) => {
+            const isDone =
+              cat.isScored && summary
+                ? summary[cat.key as keyof typeof summary]
+                : false;
             return (
               <button
                 key={cat.key}
@@ -285,7 +306,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <div className="text-xl">{cat.emoji}</div>
                 <div
                   className="text-xs font-medium tracking-wide"
-                  style={{ color: isDone ? cat.color : "oklch(0.65 0.01 220)" }}
+                  style={{
+                    color: isDone
+                      ? cat.color
+                      : cat.isScored
+                        ? "oklch(0.65 0.01 220)"
+                        : cat.color,
+                  }}
                 >
                   {cat.label}
                 </div>
@@ -295,20 +322,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 >
                   {cat.description}
                 </div>
-                {isDone ? (
-                  <CheckCircle2
-                    size={14}
-                    style={{
-                      color: cat.color,
-                      filter: `drop-shadow(0 0 4px ${cat.color})`,
-                    }}
-                  />
+                {cat.isScored ? (
+                  isDone ? (
+                    <CheckCircle2
+                      size={14}
+                      style={{
+                        color: cat.color,
+                        filter: `drop-shadow(0 0 4px ${cat.color})`,
+                      }}
+                    />
+                  ) : (
+                    <Circle
+                      size={14}
+                      className="opacity-20"
+                      style={{ color: "oklch(0.52 0.01 220)" }}
+                    />
+                  )
                 ) : (
-                  <Circle
-                    size={14}
-                    className="opacity-20"
-                    style={{ color: "oklch(0.52 0.01 220)" }}
-                  />
+                  <div style={{ height: 14 }} />
                 )}
               </button>
             );
@@ -375,6 +406,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     </button>
                   );
                 })}
+                {/* Profil link in helix panel */}
+                <button
+                  type="button"
+                  onClick={() => onNavigate("profil")}
+                  className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                  data-ocid="dashboard.helix.profil.button"
+                >
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: "oklch(0.78 0.12 280 / 0.5)" }}
+                  />
+                  <span
+                    className="text-xs"
+                    style={{ color: "oklch(0.38 0.01 220)" }}
+                  >
+                    Profil
+                  </span>
+                </button>
               </div>
             </div>
           </div>

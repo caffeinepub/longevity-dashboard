@@ -9,11 +9,11 @@ import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
-import Migration "migration";
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-(with migration = Migration.run)
+
 actor {
   // Initialize the access control system
   let accessControlState = AccessControl.initState();
@@ -45,6 +45,58 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
+  };
+
+  // Weight Entry Types and Storage
+  type WeightEntry = {
+    id : Nat;
+    weightKg : Float;
+    timestamp : Int;
+  };
+
+  module WeightEntry {
+    public func compare(a : WeightEntry, b : WeightEntry) : Order.Order {
+      Int.compare(a.timestamp, b.timestamp);
+    };
+  };
+
+  let weightEntries = Map.empty<Principal, Map.Map<Nat, WeightEntry>>();
+  let weightIdCounters = Map.empty<Principal, Nat>();
+
+  public shared ({ caller }) func addWeightEntry(weightKg : Float) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can add weight entries");
+    };
+    let id = getAndIncrementCounter(weightIdCounters, caller);
+    let entry : WeightEntry = {
+      id;
+      weightKg;
+      timestamp = Time.now();
+    };
+    let userEntries = switch (weightEntries.get(caller)) {
+      case (null) {
+        let newMap = Map.empty<Nat, WeightEntry>();
+        newMap.add(id, entry);
+        newMap;
+      };
+      case (?entries) {
+        entries.add(id, entry);
+        entries;
+      };
+    };
+    weightEntries.add(caller, userEntries);
+    id;
+  };
+
+  public query ({ caller }) func getWeightHistory() : async [WeightEntry] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view weight history");
+    };
+    let userEntries = switch (weightEntries.get(caller)) {
+      case (null) { return [] };
+      case (?entries) { entries };
+    };
+    userEntries.values().toArray().sort();
   };
 
   // Nutrition Types and Storage

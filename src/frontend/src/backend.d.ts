@@ -46,6 +46,11 @@ export interface StressEntry {
 export interface UserProfile {
     name: string;
 }
+export interface WeightEntry {
+    id: bigint;
+    weightKg: number;
+    timestamp: bigint;
+}
 export interface DailySummary {
     movement: boolean;
     stress: boolean;
@@ -65,6 +70,7 @@ export interface backendInterface {
     addRoutine(name: string, scheduledTime: string): Promise<bigint>;
     addSleepEntry(durationHours: number, qualityRating: bigint, notes: string): Promise<bigint>;
     addStressEntry(level: bigint, notes: string, techniques: string): Promise<bigint>;
+    addWeightEntry(weightKg: number): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -76,6 +82,7 @@ export interface backendInterface {
     getTodaysSleepEntry(): Promise<SleepEntry | null>;
     getTodaysStressEntry(): Promise<StressEntry | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getWeightHistory(): Promise<Array<WeightEntry>>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     startFasting(targetHours: bigint): Promise<bigint>;

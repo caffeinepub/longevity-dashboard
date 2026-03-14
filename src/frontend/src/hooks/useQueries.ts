@@ -6,6 +6,8 @@ import type {
   RoutineLog,
   SleepEntry,
   StressEntry,
+  UserProfile,
+  WeightEntry,
 } from "../backend.d";
 import { useActor } from "./useActor";
 
@@ -253,6 +255,58 @@ export function useStopFasting() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["daily-summary"] });
       qc.invalidateQueries({ queryKey: ["daily-score"] });
+    },
+  });
+}
+
+export function useWeightHistory() {
+  const { actor, isFetching } = useActor();
+  return useQuery<WeightEntry[]>({
+    queryKey: ["weight-history"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getWeightHistory();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAddWeightEntry() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (weightKg: number) => {
+      if (!actor) throw new Error("Not connected");
+      return (actor as any).addWeightEntry(weightKg);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["weight-history"] });
+    },
+  });
+}
+
+export function useUserProfile() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserProfile | null>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSaveUserProfile() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (profile: UserProfile) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["user-profile"] });
     },
   });
 }

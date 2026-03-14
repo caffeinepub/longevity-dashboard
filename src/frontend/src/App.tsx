@@ -5,6 +5,7 @@ import { Dashboard } from "./components/Dashboard";
 import { Ernaehrung } from "./components/Ernaehrung";
 import { Intervallfasten } from "./components/Intervallfasten";
 import { LoginScreen } from "./components/LoginScreen";
+import { Profil } from "./components/Profil";
 import { Routinen } from "./components/Routinen";
 import { Schlaf } from "./components/Schlaf";
 import { Stress } from "./components/Stress";
@@ -17,7 +18,8 @@ type ViewId =
   | "bewegung"
   | "stress"
   | "fasten"
-  | "routinen";
+  | "routinen"
+  | "profil";
 
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
@@ -31,7 +33,6 @@ export default function App() {
     setActiveView("dashboard");
   };
 
-  // Show login screen if not authenticated
   if (isInitializing) {
     return (
       <div
@@ -68,6 +69,7 @@ export default function App() {
         {activeView === "stress" && <Stress onBack={handleBack} />}
         {activeView === "fasten" && <Intervallfasten onBack={handleBack} />}
         {activeView === "routinen" && <Routinen onBack={handleBack} />}
+        {activeView === "profil" && <Profil onBack={handleBack} />}
       </main>
 
       <footer
